@@ -25,6 +25,7 @@ void specialKeys();
 using namespace std;
 
 const double delta = 0.001;
+bool mouseDown = false;
 
 struct Position
 {
@@ -35,6 +36,9 @@ struct Position
 
 Position start;
 Position finish;
+
+Position topleft;
+Position bottomright;
 
 
 int XSize = 600, YSize = 600;
@@ -111,7 +115,7 @@ void display(){
 		}
 	glEnd();
 
-	//glFlush();
+	glFlush();
 	glutSwapBuffers();
 
 }
@@ -146,9 +150,13 @@ void mouse(int button, int state, int x, int y)
 				start.x = x; //x1
 				start.y = y; //y1    
 
+				finish.x = x;
+				finish.y = y;
+
 				xminSelect = xmin + (double)x/(XSize)*(xmax - xmin);
 				yminSelect = ymin + (double)y/(YSize)*(ymax - ymin);
 
+				mouseDown = true;
 				cout<<"Initial pos set: (" << start.x << " " << start.y << endl;                  
 			}
 			if(state==GLUT_UP)
@@ -188,7 +196,25 @@ void mouse(int button, int state, int x, int y)
 				xmin = xminSelect; xmax = xmaxSelect;
 				ymin = yminSelect; ymax = ymaxSelect;
 
+
+				if (xmin > xmax)
+				{
+					double temp = xmax;
+					xmax = xmin;
+					xmin = temp;
+				}
+				if(ymin > ymax)
+				{
+					double temp = ymax;
+					ymax = ymin;
+					ymin = temp;
+				}
+
+
+				mouseDown = false;
 				// repaint
+
+				printf("xmin %f xmax %f ymin %f ymax %f\n", xmin, xmax, ymin, ymax);
 				glutPostRedisplay();
 
 			}
@@ -199,26 +225,112 @@ void mouse(int button, int state, int x, int y)
 
 void motion( int x, int y )
 {
+	cout << "x = " << x << " y = " << y << endl;
+
+	if (!mouseDown)
+		return;
+
+glEnable(GL_COLOR_LOGIC_OP);
+//glLogicOp( GL_XOR );
+glPolygonMode(GL_FRONT, GL_LINE);
+glDrawBuffer(GL_FRONT);
+
+
+	if (start.x > finish.x)
+	{
+		topleft.x = finish.x;
+		bottomright.x = start.x;
+	}
+	else
+	{
+		topleft.x = start.x;
+		bottomright.x = finish.x;
+	}
+	if (start.y > finish.y)
+	{
+		topleft.y = finish.y;
+		bottomright.y = start.y;
+	}
+	else
+	{
+		topleft.y = start.y;
+		bottomright.y = finish.y;
+	}
+
+	//glBegin(GL_QUADS);
+	//glColor3fv(white);
+	//glVertex2f(start.x, start.y);
+	//glVertex2f(start.x, finish.y);
+	//glVertex2f(finish.x, finish.y);
+	//glVertex2f(finish.x, start.y);
+	//glEnd();
 	glBegin(GL_QUADS);
 	glColor3fv(white);
-	glVertex2f(start.x, start.y);
-	glVertex2f(start.x, finish.y);
-	glVertex2f(finish.x, finish.y);
-	glVertex2f(finish.x, start.y);
+	glVertex2f(topleft.x, topleft.y);
+	glVertex2f(topleft.x, bottomright.y);
+	glVertex2f(bottomright.x, bottomright.y);
+	glVertex2f(bottomright.x, topleft.y);
 	glEnd();
+
+
+	if (start.x > x)
+	{
+		topleft.x = x;
+		bottomright.x = start.x;
+	}
+	else
+	{
+		topleft.x = start.x;
+		bottomright.x = x;
+	}
+	if (start.y > y)
+	{
+		topleft.y = y;
+		bottomright.y = start.y;
+	}
+	else
+	{
+		topleft.y = start.y;
+		bottomright.y = y;
+	}
 
 	finish.x = x;
 	finish.y = y;
 
+	//glBegin(GL_QUADS);
+	//glColor3fv(white);
+ //   //glColor3d(1,1,1);
+	//glVertex2f(start.x, start.y);
+ //   //glColor3d(1,1,1);
+	//glVertex2f(start.x, finish.y);
+ //   //glColor3d(1,1,1);
+	//glVertex2f(finish.x, finish.y);
+ //   //glColor3d(1,1,1);
+	//glVertex2f(finish.x, start.y);
+	//glEnd();
+
 	glBegin(GL_QUADS);
 	glColor3fv(white);
-	glVertex2f(start.x, start.y);
-	glVertex2f(start.x, finish.y);
-	glVertex2f(finish.x, finish.y);
-	glVertex2f(finish.x, start.y);
+	glVertex2f(topleft.x, topleft.y);
+	glVertex2f(topleft.x, bottomright.y);
+	glVertex2f(bottomright.x, bottomright.y);
+	glVertex2f(bottomright.x, topleft.y);
 	glEnd();
 
+//glLogicOp(GL_CLEAR);
+glDisable(GL_COLOR_LOGIC_OP);
 	//glutPostRedisplay();
+//glEnable(GL_BLEND); 
+//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+//glColor4ub(255, 255, 255, 128);
+//glRectf(start.x, start.y, finish.x, finish.y);
+//glDisable(GL_BLEND);
+	//glutSwapBuffers();
+glFlush(); // must flush here
+glDrawBuffer(GL_BACK);
+    //glDisable(GL_COLOR_LOGIC_OP);
 }
 
 
@@ -325,6 +437,11 @@ int main(int argc, char* argv[]){
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(specialKeys);
+
+
+
+	//glEnable(GL_COLOR_LOGIC_OP);
+	glLogicOp(GL_XOR);
 
 	//  Pass control to GLUT for events
 	glutMainLoop();

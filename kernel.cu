@@ -2,8 +2,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
-
-#include <glut.h>
+#include <GL/glut.h>
 
 #include "global.h"
 

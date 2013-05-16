@@ -20,9 +20,6 @@
 
 void display();
 void specialKeys();
-// Global Variables
-double rotate_y=10; 
-double rotate_x=20;
 
 
 using namespace std;
